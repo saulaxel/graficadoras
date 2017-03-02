@@ -6,41 +6,29 @@
  *              unicamente usando texto.                  *
  * ====================================================== */
 
-/*=======================*
- * Bibliotecas incluidas *
- *=======================*/
+/*========================*
+ * Bibliotecas requeridas *
+ *========================*/
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdbool.h>
 #include <stdint.h>
 #include <math.h>
 
+#ifdef __unix__
+    #include "../funciones.h"
+    #include "../acentos.h"
+#else // Windows
+    #include "..\funciones.h"
+    #include "..\acentos.h"
+#endif
+
 /*==============*
  * Definiciones *
  *==============*/
-#define ESCALA 2
+#define ESCALA 2   // 2 columnas de texto representan una unidad en x
 
-#ifdef _WIN32
-    #define CLEAR "cls"
-    #define A "\xA0"
-    #define E "\x82"
-    #define I "\xA1"
-    #define O "\xA2"
-    #define U "\xA3"
-    #define N "\xA4"
-#else // unix
-    #define CLEAR "clear"
-    #define A "\u00E1"
-    #define E "\u00E9"
-    #define I "\u00ED"
-    #define O "\u00F3"
-    #define U "\u00FA"
-    #define N "\u00F1"
-    #define PUNTO "\u25CF"
-#endif // Fin _WIN32
-
-#define SALIR 0
-#define GRAFICAS 5
+#define SALIR    0
 
 /*==================*
  * Plano cartesiano *
@@ -60,10 +48,10 @@ void pintarEjes(void);                   // Pone carActeres en la matriz para re
 void pintarFuncion(void);                // Establece puntos en la matriz
 void graficar(void);                     // Imprime la matriz a pantalla
 
-int funcion(double x);                  // Funcion a graficar
+int16_t funcion(double x);               // Funcion a graficar
 
 void desplegarInstrucciones(void);       // Imprime instrucciones
-int8_t menu(void);                             // Imprime opciones y regresa la elecciOn del usuario
+int8_t menu(void);                       // Imprime opciones y regresa la elecciOn del usuario
 void pedirDatos(void);                   // Pregunta el tipo de grAfica y los datos necesarios
 
 // Termina la ejecuciOn tras un mensaje
@@ -101,17 +89,17 @@ int32_t main(int32_t argc, char **argv){
 void desplegarInstrucciones(void) {
     puts("Graficadora en texto plano:");
     puts("\nEl programa requiere que se le indique");
-    puts("romo argumentos las dimensiones en l" I "neas y");
+    puts("como argumentos las dimensiones en l" I "neas y");
     puts("y en columnas de tu consola.");
 
     return;
 }
 
 /* ================================================= *
- * FunciOn    : menU                                 *
+ * FunciOn    : menu                                 *
  * DescripciOn: Despliega las opciOnes para graficar *
  *              y pide el resultado al usuario.      *
- * Regresa    :  entero correspondiente a la opciOn  *
+ * Regresa    : Entero correspondiente a la opciOn  *
  *              seleccionada                         *
  * ================================================= */
 int8_t menu(void) {
@@ -129,7 +117,7 @@ int8_t menu(void) {
         int c;
         printf("> ");
         opcionValida = scanf("%hd", &opcion) 
-            && opcion > 0 && opcion < GRAFICAS;
+            && opcion > 0 && opcion < NUM_FUNCIONES;
         do {
             c = getchar();
         } while( c != '\n' && c != EOF );
@@ -161,12 +149,11 @@ void establecerTamanioPanel(char **tamanio) {
  * DescripciOn :  Limpia la matriz y pone en ella caracteres *
  *                que se en conjunto se asemejan a un par de *
  *                ejes cartesianos                           *
- * Regresa     :  nada                                       *
  * ========================================================= */
 void pintarEjes(void) {
-    int n, m;
+    int16_t n, m;
 
-    // Se limpia la grAfica (por si se quiere reutilizar)
+    // Se rellena todo el lienzo con espacioes
     for(n = 0; n < TAM_X; ++n){
         for(m = 0; m <TAM_Y; ++m){
             panel[n][m] = ' ';
@@ -189,7 +176,7 @@ void pintarEjes(void) {
     return;
 }
 
-int funcion(double x) {
+int16_t funcion(double x) {
     if( x == 0 ){
         return 50;
     }
