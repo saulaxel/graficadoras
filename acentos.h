@@ -28,6 +28,8 @@
     #define MU "\xE9"
     #define MN "\xA5"
 
+    #define Q  "\xA8"
+
 #else // unix
 
     #define CLEAR "clear"
@@ -45,6 +47,8 @@
     #define MO "\u00D3"
     #define MU "\u00DA"
     #define MN "\u00D1"
+
+    #define Q  "\u00BF"
 
     /*
      * Caracter unicode en forma de punto que solo puede usarse 
