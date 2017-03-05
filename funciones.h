@@ -5,8 +5,8 @@
 /*              por los programas para graficar.          */
 /**********************************************************/
 
-#ifndef _FUNCIONEXPS_H
-#define _FUNCIONEXPS_H
+#ifndef _FUNCIONES_H
+#define _FUNCIONES_H
 
 /*=======================*
  * Bibliotecas incluidas *
@@ -140,6 +140,14 @@ int16_t * func_polinomica(double x, bool init_values, ...) {
         desp_x = va_arg(apt_args, double);
         desp_y = va_arg(apt_args, double);
 
+#ifndef NDEBUG
+        printf("Los valores son: \n");
+        printf("a0 = %lf a1 = %lf a2 = %lf a3 = %lf\n",
+                coeficientes[0], coeficientes[1],
+                coeficientes[2], coeficientes[3]);
+        printf("desplazamiento x = %lf desplazamineto y = %lf\n", desp_x, desp_y);
+#endif
+
         va_end(apt_args);
 
         y[0] = 1; // RegresarA 1 valor cada vez que sea llamada
@@ -153,6 +161,9 @@ int16_t * func_polinomica(double x, bool init_values, ...) {
                coeficientes[3] * x * x * x; // x^3
 
         y[1] += desp_y;
+#ifndef NDEBUG
+        printf("El valor de y es: %hd\n", y[1]);
+#endif
     }
     return y;
 }
@@ -170,7 +181,7 @@ int16_t * func_conica_cuad(double x, bool init_values, ...) {
     // de la forma a0*x^0 + a1*x^1 + a2*x^2 + a3*x^3
     static double eje_x, eje_y;
     static double desp_x, desp_y;
-    static int32_t tipo; // false para elipse, true para hiperbola
+    static int tipo; // false para elipse, true para hiperbola
 
     static int16_t y[3] = { 0 };
 
@@ -185,7 +196,14 @@ int16_t * func_conica_cuad(double x, bool init_values, ...) {
         desp_x = va_arg(apt_args, double);
         desp_y = va_arg(apt_args, double);
 
-        tipo = va_arg(apt_args, int32_t);
+        tipo = va_arg(apt_args, int);
+
+#ifndef NDEBUG
+        printf("Los valores son:\n");
+        printf("largo x: %lf largo y: %lf\n", eje_x, eje_y);
+        printf("desplazamineto x %lf desplazamineto y %lf\n",
+                desp_x, desp_y);
+#endif
 
         va_end(apt_args);
 
@@ -194,16 +212,17 @@ int16_t * func_conica_cuad(double x, bool init_values, ...) {
     } else {
         x -= desp_x;
 
-        float arg;
+        double arg;
 
         // Los signos se declaran enteros de 16 bits
         // para evitar que se hagan parseos de mAs al
         // hacer operaciones.
-        int16_t signo1 = (tipo & 1) ? -1 : 1;
-        int16_t signo2 = (tipo & 2) ? -1 : 1;
+        int8_t signo1 = (tipo & 1) ? -1 : 1;
+        int8_t signo2 = (tipo & 2) ? -1 : 1;
 
-#ifdef DEBUG
-        printf("Los signos son: signo1 = %hd signo2 = %hd\n", signo1, signo2);
+#ifndef NDEBUG
+        printf("Los signos son: signo1 = %hd signo2 = %hd\n",
+                (short)signo1, (short)signo2);
 #endif
 
         arg = signo2 * (eje_x*eje_x + signo1 * x*x);
@@ -217,6 +236,11 @@ int16_t * func_conica_cuad(double x, bool init_values, ...) {
 
         y[1] += desp_y;
         y[2] += desp_y;
+
+#ifndef NDEBUG
+        printf("Los valores de y son\n");
+        printf("y1 = %hd y2 = %hd\n", y[1], y[2]);
+#endif
     }
 
     return y;
@@ -249,6 +273,13 @@ int16_t * func_sin(double x, bool init_values, ...) {
         desp_x = va_arg(apt_args, double);
         desp_y = va_arg(apt_args, double);
 
+#ifndef NDEBUG
+        printf("Los valores recibidos son:\n");
+        printf("amplitud = %lf periodo = %lf\n", amplitud, periodo);
+        printf("desplazamienot x = %lf desplazamiento y = %lf\n",
+                desp_x, desp_y);
+#endif
+
         va_end(apt_args);
 
         y[0] = 1; // RegresarA 1 valores cada vez que sea llamada
@@ -259,6 +290,10 @@ int16_t * func_sin(double x, bool init_values, ...) {
         y[1] = amplitud * sin( x / periodo );
 
         y[1] += desp_y;
+
+#ifndef NDEBUG
+        printf("El valor de y1 es: %hd\n", y[1]);
+#endif
     }
 
     return y;
@@ -290,6 +325,13 @@ int16_t * func_tan(double x, bool init_values, ...) {
         desp_x = va_arg(apt_args, double);
         desp_y = va_arg(apt_args, double);
 
+#ifndef NDEBUG
+        printf("Los valores recibidos son:\n");
+        printf("amplitud = %lf periodo = %lf\n", amplitud, periodo);
+        printf("desplazamienot x = %lf desplazamiento y = %lf\n",
+                desp_x, desp_y);
+#endif
+
         va_end(apt_args);
 
         y[0] = 1; // RegresarA 1 valores cada vez que sea llamada
@@ -300,6 +342,10 @@ int16_t * func_tan(double x, bool init_values, ...) {
         y[1] = amplitud * tan( x / periodo );
 
         y[1] += desp_y;
+
+#ifndef NDEBUG
+        printf("El valor de y1 es: %hd\n", y[1]);
+#endif
     }
 
     return y;
@@ -330,7 +376,7 @@ int16_t * func_exponencial(double x, bool init_values, ...) {
         desp_x = va_arg(apt_args, double);
         desp_y = va_arg(apt_args, double);
 
-#ifdef DEBUG
+#ifndef NDEBUG
         printf("Los datos son:\n");
         printf("a = %lf b = %lf\n", a, b);
         printf("desp x = %lf desp y = %lf\n", desp_x, desp_y);
@@ -347,6 +393,10 @@ int16_t * func_exponencial(double x, bool init_values, ...) {
         y[1] = a * pow(EXP, x / b);
 
         y[1] += desp_y;
+
+#ifndef NDEBUG
+        printf("El valor de y[1] es: %hd\n", y[1]);
+#endif
     }
 
     return y;
@@ -376,7 +426,7 @@ int16_t * func_logaritmo(double x, bool init_values, ...) {
         desp_x = va_arg(apt_args, double);
         desp_y = va_arg(apt_args, double);
 
-#ifdef DEBUG
+#ifndef NDEBUG
         printf("Los datos son:\n");
         printf("a = %lf b = %lf\n", a, b);
         printf("desp x = %lf desp y = %lf\n", desp_x, desp_y);
@@ -394,6 +444,10 @@ int16_t * func_logaritmo(double x, bool init_values, ...) {
         y[1] = (arg > 0) ? a * log(x * b) : 10000;
 
         y[1] += desp_y;
+
+#ifndef NDEBUG
+        printf("El valor de y1 es: %hd\n", y[1]);
+#endif
     }
 
     return y;
@@ -624,4 +678,4 @@ double leerDoble(double min, double max) {
     return leido;
 }
 
-#endif // Fin _FUNCIONEXPS_H
+#endif // Fin _FUNCIONES_H

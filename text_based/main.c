@@ -15,7 +15,7 @@
 #include <stdint.h>
 #include <math.h>
 
-#define DEBUG
+#define NDEBUG
 
 #ifdef __unix__
     #include "../funciones.h"
@@ -23,14 +23,15 @@
 #else // Windows
     #include "..\funciones.h"
     #include "..\acentos.h"
-#endif
+#endif // Fin __unix__
 
 #include "graficadora.h"
 
 /*==============*
  * Definiciones *
  *==============*/
-#define SALIR    0
+#define SALIR_TRAS_GRAFICAR 100
+#define SALIR               0
 
 /*===========*
  * Funciones *
@@ -48,11 +49,11 @@ void imprimirError(const char *mensaje);
  *===================*/
 int32_t main(int32_t argc, char **argv){
     int8_t opcion;
-    bool graficar_una_vez = false;
+    bool interrumpir = false;
 
     if( argc != 3 ) {
         desplegarInstrucciones();
-        exit(EXIT_SUCCESS);
+        exit(EXIT_FAILURE);
     }
 
     if( !establecerTamanioPanel(argv + 1) ) {
@@ -62,13 +63,13 @@ int32_t main(int32_t argc, char **argv){
 
     do {
         opcion = menu();
-#ifdef DEBUG
+#ifndef NDEBUG
             printf("Saliendo del menU\n");
             printf("opciOn = %hd\n", opcion);
-#endif // DEBUG
+#endif // NDEBUG
 
-        if( opcion == 100 ) {
-            graficar_una_vez = true;
+        if( opcion == SALIR_TRAS_GRAFICAR ) {
+            interrumpir = true;
         } else if( opcion != 0) {
             pintarEjes();
 
@@ -78,11 +79,14 @@ int32_t main(int32_t argc, char **argv){
 
             graficar();
 
-#ifdef DEBUG
+#ifndef NDEBUG
             printf("DespuEs de graficar\n");
-#endif // DEBUG
+            printf("Se grafico la funciOn %s\n", DESC_FUNC[opcion -1]);
+#endif // NDEBUG
 
-            if(graficar_una_vez) {
+            if( interrumpir ) {
+                // OpciOn especial para cuando la entrada es un archivo
+                // y queremos que solo haga una demostraciOn rApida.
                 break;
             }
 
@@ -103,15 +107,16 @@ int32_t main(int32_t argc, char **argv){
 void desplegarInstrucciones(void) {
     puts("Graficadora en texto plano:");
     puts("\nEl programa requiere que se le indique");
-    puts("como argumentos las dimensiones en l" I "neas y");
-    puts("y en columnas de tu consola.");
+    puts("como argumentos las dimensiones de tu consola.");
+    puts("El primer argumento son las columnas y el");
+    puts("segundo son las filas.");
 
     return;
 }
 
 /* ================================================= *
  * FunciOn    : menu                                 *
- * DescripciOn: Despliega las opciOnes para graficar *
+ * DescripciOn: Despliega las opciones para graficar *
  *              y pide el resultado al usuario.      *
  * Regresa    : Entero correspondiente a la opciOn  *
  *              seleccionada                         *
@@ -143,7 +148,7 @@ int8_t menu(void) {
         printf(" > ");
         opcionValida = scanf("%hd", &opcion) 
             && ( ( opcion >= 0 && opcion <= NUM_FUNCIONES )
-                || opcion == 100);
+                    || opcion == SALIR_TRAS_GRAFICAR );
         while( (c = getchar()) != '\n' && c != EOF );
     }
 

@@ -110,6 +110,8 @@ void pintarEjes(void) {
 void pintarFuncion( int16_t * (*f)(double, bool, ...) ) {
     int16_t *y;
 
+    putchar('\n');
+
     y = f(0.0, false);
 
     for(int16_t i = 0; i < TAM_X; i++) {
