@@ -1,13 +1,28 @@
+/**********************************************************/
+/* Biblioteca : graficadora                               */
+/* DescripciOn: Define funciones comunes para ser usadas  */
+/*              por los programas para graficar.          */
+/**********************************************************/
+
 #ifndef _GRAFICADORA_H
 #define _GRAFICADORA_H
 
-#ifdef GRAFICAR_CON_OPENGL
-    #include <GL/glut.h>
-#elif defined(GRAFICAR_CON_SDL)
-    #include <graphics.h>
-#endif
+/*========================*
+ * Bibliotecas requeridas *
+ *========================*/
 
+#include <graphics.h>
 #include <math.h>
+
+#ifdef __unix__
+    #include "../acentos.h"
+#else // Probablemente windows
+    #include "..\acentos.h"
+#endif // Fin __unix__
+
+/*==============*
+ * Definiciones *
+ *==============*/
 
 #define TAMX 640
 #define TAMY 480
@@ -16,12 +31,122 @@
 
 #define ESPACIO 10
 
+/*=======================*
+ * Prototipos de funciOn *
+ *=======================*/
+
+void abrirGraficadora(void);
+void cerrarGraficadora(void);
 void pintarEjes(void);
+void pintarFuncion();
 
 
-#ifdef GRAFICAR_CON_SDL
+/* ====================================================== *
+ * FunciOn    : establecerTamanioPanel                    *
+ * DescripciOn: Verifica si los argumentos recibidos      *
+ *              por lInea de comandos son enteros validos *
+ *              y termina la ejecuciOn en caso de que no  *
+ * ====================================================== */
+bool establecerTamanioPanel(char **tamanio) {
+    int allocated = true;
 
-int * (*f)(float x);
+    if( (TAM_X = atoi(tamanio[0])) != 0 &&
+        (TAM_Y = atoi(tamanio[1])) != 0 
+      ) 
+    {
+        panel = (char **) calloc(TAM_X, sizeof(char *));
+
+        if( panel ) {
+            for(int i = 0; i < TAM_X; i++) {
+                panel[i] = (char *) calloc(TAM_Y, sizeof(char));
+                if( !panel[i] ) {
+                    allocated = false;
+                    break;
+                }
+            }
+        } else {
+            allocated = false;
+        } 
+    }
+
+    return allocated;
+}
+
+/* ========================================================= *
+ * FunciOn     :  pintarEjes                                 *
+ * DescripciOn :  Limpia la matriz y pone en ella caracteres *
+ *                que se en conjunto se asemejan a un par de *
+ *                ejes cartesianos                           *
+ * ========================================================= */
+void pintarEjes(void) {
+    int16_t n, m;
+
+    // Se rellena todo el lienzo con espacios
+    for(n = 0; n < TAM_X; ++n) {
+        for(m = 0; m < TAM_Y; ++m){
+            panel[n][m] = ' ';
+        }
+    }
+
+    // Eje x
+    for(n = 0; n < TAM_X; ++n) {
+        panel[n][TAM_Y / 2] = '-';
+    }
+
+    // Eje y
+    for(n = 0; n < TAM_Y; ++n) {
+        panel[TAM_X / 2][n] = '|';
+    }
+
+    // Origen
+    panel[TAM_X / 2][TAM_Y / 2] = '+';
+
+    return;
+}
+
+void pintarFuncion( int16_t * (*f)(double, bool, ...) ) {
+    int16_t *y;
+
+    putchar('\n');
+
+    y = f(0.0, false);
+
+    for(int16_t i = 0; i < TAM_X; i++) {
+        f(((double)i -TAM_X / 2 ) / ESCALA, false);
+        for(int16_t j = 1; j <= y[0]; j++) {
+            if( y[j] <= TAM_Y / 2 && y[j] >= -TAM_Y / 2 ) {
+                panel[i][y[j] + TAM_Y / 2] = '*';
+            }
+        }
+    }
+
+    return;
+}
+
+void graficar(void) {
+    int i, j;
+    for(j = TAM_Y - 1; j >= 0; --j){
+        for(i = 0; i < TAM_X; ++i){
+#ifdef __unix__
+            if(panel[i][j] == '*') {
+                printf(PUNTO);
+            } else {
+                putchar(panel[i][j]);
+            }
+#else // Windows 
+            putchar(panel[i][j]);
+#endif // Fin __unix__
+        }
+        putchar('\n');
+    }
+    putchar('\n');
+
+    getchar();
+
+    return;
+}
+
+#endif // _GRAFICADORA_H
 
 void abrirGraficadora(void) {
     int gd = DETECT, gm;
@@ -30,55 +155,17 @@ void abrirGraficadora(void) {
 
     pintarEjes();
 
-#elif defined(GRAFICAR_CON_OPENGL)
-void abrirGraficadora(int argc, char**argv) {
-    glClearColor(0.0, 0.0, 0.0, 1.0);
-    glutInit(&argc, &argv);
-
-    glutInitDisplayMode(GLUT_SINGLE | GLUT_RGB);
-    glutInitWindowPosition(80, 80);
-    glutInitWindowSize(TAMX, TAMY);
-
-    glutCreateWindow("Graficadora UNAM");
-    glutDisplayFunc(display);
-
-#endif
-
     return;
 }
 
-#ifdef GRAFICAR_CON_OPENGL
-void display() {
-
-    glClear(GL_COLOR_BUFFER_BIT);
-
-    glColor3f(1.0, 1.0, 1.0);
-
-    pintarEjes();
-
-    pintarFuncion(f);
-
-    glFlush();
-}
-#endif
-
-
-#ifdef GRAFICAR_CON_SDL
 void cerrarGraficadora(void) {
     closegraph();
 
     return;
 
 }
-#elif defined(GRAFICAR_CON_OPENGL)
-void elegirFuncion(int * (*func)(float)) {
-    f = func;
-    return;
-}
-#endif
 
 void pintarEjes(void) {
-#ifdef GRAFICAR_CON_SDL
     // Eje X
     line(ESPACIO, TAMY / 2, TAMX - ESPACIO, TAMY / 2);
     line(ESPACIO, TAMY / 2, ESPACIO + TAMFLECHA, TAMY / 2 + TAMFLECHA);
@@ -98,19 +185,6 @@ void pintarEjes(void) {
             TAMFLECHA, TAMY - ESPACIO - TAMFLECHA);
     line(TAMX / 2, TAMY - ESPACIO, TAMX / 2 -
             TAMFLECHA, TAMY - ESPACIO - TAMFLECHA);
-#elif defined(GRAFICAR_CON_OPENGL)
-
-    glBegin(GL_LINES);
-    /*glColor3f(1, 0, 0); glVertex3f(0, 0, 0); glVertex3f(10, 0, 0);*/
-    /*glColor3f(0, 1, 0); glVertex3f(0, 0, 0); glVertex3f(0, 10, 0);*/
-    /*glColor3f(0, 0, 1); glVertex3f(0, 0, 0); glVertex3f(0, 0, 10);*/
-
-    glColor3f(1, 1, 1);
-    glVertex2d(0, 0);
-    glVertex2d(0.1,0.1);
-    glEnd();
-
-#endif
 
     return;
 }
@@ -137,7 +211,6 @@ void pintarFuncion(int* (*f)(float x)) {
                     y_act[i] < TAMY / 2 - ESPACIO &&
                     y_ant[i] > -TAMY / 2 + ESPACIO &&
                     y_act[i] > -TAMY / 2  + ESPACIO ) {
-#ifdef GRAFICAR_CON_SDL
                 line(
                         x - 1,
                         -y_ant[i] + TAMY / 2,
@@ -145,8 +218,6 @@ void pintarFuncion(int* (*f)(float x)) {
                         -y_act[i] + TAMY / 2
 
                     );
-#elif defined(GRAFICAR_CON_OPENGL)
-#endif
 
             }
             for(int s = 0; s <= y_act[0]; s++) {
@@ -157,10 +228,6 @@ void pintarFuncion(int* (*f)(float x)) {
         }
 
     }
-
-#ifdef GRAFICAR_CON_OPENGL
-    glutMainLoop();
-#endif // GRAFICAR_CON_OPENGL
 
     free(y_ant);
 }
